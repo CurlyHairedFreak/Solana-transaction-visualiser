@@ -7,11 +7,11 @@ import {
 
 interface TransactionDetails {
   data: {
-    signature?: string;
-    fee?: number;
-    blockTime?: number | null;
-    slot?: number;
-    previousBlockhash?: string;
+    signature: string;
+    fee: number;
+    blockTime: number;
+    slot: number;
+    previousBlockhash: string;
   };
 }
 //  Accepts value from input field as parameter to search for transaction details using solana web3.js
@@ -32,18 +32,25 @@ const useFetch = (inputValue: string) => {
     try {
       const txSearchResult: ParsedTransactionWithMeta | null =
         await connection.getParsedTransaction(transactionId, "confirmed");
-      setTransaction({
-        data: {
-          signature: txSearchResult?.transaction?.signatures[0],
-          fee: txSearchResult?.meta?.fee,
-          blockTime: txSearchResult?.blockTime,
-          slot: txSearchResult?.slot,
-          previousBlockhash:
-            txSearchResult?.transaction.message.recentBlockhash,
-        },
-      });
+      //  Validate data is not null before updating state
+      if (
+        txSearchResult &&
+        typeof txSearchResult.blockTime === "number" &&
+        typeof txSearchResult.meta!.fee === "number"
+      ) {
+        setTransaction({
+          data: {
+            signature: txSearchResult.transaction!.signatures[0],
+            fee: txSearchResult.meta!.fee,
+            blockTime: txSearchResult.blockTime,
+            slot: txSearchResult.slot,
+            previousBlockhash:
+              txSearchResult.transaction.message.recentBlockhash,
+          },
+        });
+      }
+      console.log(transaction);
       // set state for conditional rendering
-
       SetTransactionSuccess(true);
     } catch (err) {
       // if input value(searched transaction id) is invalid an error will show in the console
@@ -52,6 +59,7 @@ const useFetch = (inputValue: string) => {
       SetTransactionSuccess(false);
     }
   };
+
   // returns function and states for use in main.tsx
   return {
     fetchTransaction,
